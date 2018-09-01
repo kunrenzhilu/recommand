@@ -7,6 +7,19 @@ import sys
 import time
 import h5py
 
+def load_prme_text_embeddings(path, N):
+    def complement_embeddings(embeddings, N):
+        tmp = np.zeros(shape=(N, embeddings.shape[1]-1))
+        for i, emb in enumerate(embeddings):
+            id = int(emb[0])
+            tmp[id][:] = emb[1:]
+        return tmp
+    
+    assert not path is None and not N is None    
+    mat = np.loadtxt(path)
+    print('loaded embeddings from {}, shape {}'.format(path, mat.shape))
+    return complement_embeddings(mat, N)
+
 def get_GE_embeddings(args):
     def complement_embeddings(embeddings, N):
         tmp = np.zeros(shape=(N, embeddings.shape[1]-1))
@@ -97,11 +110,12 @@ def load_embedding_from_text(path):
     print('loaded embeddings from {}, shape {}'.format(path, mat.shape))
     return mat
 
-def get_sequences(origin_data):
+def get_sequences(origin_data, with_user=False):
+    indices = [0,4] if not with_user else [0,1,4]
     grouped_data, sorted_key = group_data_by_id(origin_data)
     seqs = []
     for k, v in grouped_data.items():
-        seqs.append(np.concatenate(v)[:,[0,4]])
+        seqs.append(np.concatenate(v)[:,indices])
     return seqs
 
 def group_data_by_id(data):

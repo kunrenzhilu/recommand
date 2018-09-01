@@ -22,7 +22,12 @@ class Recommander:
         self.l_xs = tf.placeholder(dtype=tf.int32, shape=(None))
         
         self.user_profile = tf.reduce_sum(tf.nn.embedding_lookup(emb, self.l_xs) * tf.reshape(self.decays, (-1,1)), axis=0, keepdims=True)
-        self.score = tf.matmul(self.user_profile, tf.transpose(emb))
+        if not sem_embeddings is None:
+            self.user_sem = self.user_profile[:,:sem_emb.shape[1]]
+            self.score = tf.matmul(self.user_sem, tf.transpose(sem_emb))
+        else:
+            self.score = tf.matmul(self.user_profile, tf.transpose(emb))
+            
         if not time_embeddings is None:
             self.time_emb_now = tf.nn.embedding_lookup(time_emb, self.t_now)
             if not sem_embeddings is None:
@@ -31,7 +36,7 @@ class Recommander:
                 self.score += tf.matmul(self.time_emb_now, tf.transpose(emb))
         if not region_embeddings is None:
             self.r_emb_now = tf.nn.embedding_lookup(region_emb, self.r_now)
-            self.score = tf.matmul(self.r_emb_now, tf.transpose(emb))
+            self.score += tf.matmul(self.r_emb_now, tf.transpose(emb))
         self.score = tf.squeeze(self.score)
         
 def get_recommandation_result(testset, args, poi2region, emb_set, mode):
@@ -39,7 +44,7 @@ def get_recommandation_result(testset, args, poi2region, emb_set, mode):
     with graph.as_default():
         if mode == 'GE':
             embeddings, region_embeddings, time_embeddings = emb_set
-            model = Recommander(embeddings, region_embeddings, time_embeddings)
+            model = Recommander(embeddings, time_embeddings, region_embeddings)
         elif mode == 'STSG':
             sem_emb, embeddings, time_embeddings = emb_set
             model = Recommander(embeddings, time_embeddings=time_embeddings, sem_embeddings=sem_emb)

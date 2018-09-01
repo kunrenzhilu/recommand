@@ -58,6 +58,8 @@ def get_parser(args):
         args.n_timeslot = 7
     elif args.pattern == 'week-end':
         args.n_timeslot = 2
+    elif args.pattern == 'hand':
+        args.n_timeslot = 6
     else: 
         args.n_timeslot = -1
     args.TB_DIR = os.path.join(args.LOG_DIR, 'tb')
